@@ -30,10 +30,10 @@ export function UserDetailScreen({ route }: UserDetailScreenProps) {
     <View style={styles.container}>
       <View style={styles.card}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{user.name.charAt(0).toUpperCase()}</Text>
+          <Text style={styles.avatarText}>{user.fullName.charAt(0).toUpperCase()}</Text>
         </View>
 
-        <Text style={styles.name}>{user.name}</Text>
+        <Text style={styles.name}>{user.fullName}</Text>
         <Text style={styles.email}>{user.email}</Text>
 
         <View style={styles.infoRow}>
@@ -44,7 +44,7 @@ export function UserDetailScreen({ route }: UserDetailScreenProps) {
         <View style={styles.infoRow}>
           <Text style={styles.label}>Member since</Text>
           <Text style={styles.value}>
-            {new Date(user.createdAt).toLocaleDateString()}
+            {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
           </Text>
         </View>
       </View>

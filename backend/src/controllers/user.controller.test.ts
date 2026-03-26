@@ -10,7 +10,7 @@ describe('UserModel', () => {
   describe('findAll', () => {
     it('should return all users', async () => {
       const mockUsers = [
-        { id: 1, email: 'test@test.com', name: 'Test User', createdAt: new Date() },
+        { id: 1, username: 'test', fullName: 'Test User', email: 'test@test.com', createdAt: new Date() },
       ];
       (UserModel.findAll as jest.Mock).mockResolvedValue(mockUsers);
 
@@ -23,7 +23,7 @@ describe('UserModel', () => {
 
   describe('findById', () => {
     it('should return user when found', async () => {
-      const mockUser = { id: 1, email: 'test@test.com', name: 'Test User', createdAt: new Date() };
+      const mockUser = { id: 1, username: 'test', fullName: 'Test User', email: 'test@test.com', createdAt: new Date() };
       (UserModel.findById as jest.Mock).mockResolvedValue(mockUser);
 
       const user = await UserModel.findById(1);
@@ -43,8 +43,8 @@ describe('UserModel', () => {
 
   describe('create', () => {
     it('should create a new user', async () => {
-      const newUser = { email: 'new@test.com', name: 'New User' };
-      const createdUser = { ...newUser, id: 1, createdAt: new Date() };
+      const newUser = { username: 'newuser', password: '123456', fullName: 'New User', email: 'new@test.com' };
+      const createdUser = { id: 1, username: 'newuser', fullName: 'New User', email: 'new@test.com', createdAt: new Date() };
       (UserModel.create as jest.Mock).mockResolvedValue(createdUser);
 
       const user = await UserModel.create(newUser);

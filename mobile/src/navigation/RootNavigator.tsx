@@ -1,37 +1,45 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
-import { HomeScreen } from '../screens/HomeScreen';
-import { UserListScreen } from '../screens/UserListScreen';
-import { UserDetailScreen } from '../screens/UserDetailScreen';
+import { useAuthStore } from '../stores/auth.store';
+import { MainTabNavigator } from './MainTabNavigator';
+import { LoginScreen } from '../screens/LoginScreen';
+import { RegisterScreen } from '../screens/RegisterScreen';
+import { ProductListScreen } from '../screens/ProductListScreen';
+import { ProductDetailScreen } from '../screens/ProductDetailScreen';
+import { CheckoutScreen } from '../screens/CheckoutScreen';
+import { InvoiceScreen } from '../screens/InvoiceScreen';
+import { OrderHistoryScreen } from '../screens/OrderHistoryScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
+  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+
   return (
     <Stack.Navigator
-      initialRouteName="Home"
+      initialRouteName={isLoggedIn ? 'MainTabs' : 'Login'}
       screenOptions={{
         headerStyle: { backgroundColor: '#6366f1' },
         headerTintColor: '#fff',
         headerTitleStyle: { fontWeight: 'bold' },
       }}
     >
-      <Stack.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{ title: 'MiniProj' }}
-      />
-      <Stack.Screen
-        name="UserList"
-        component={UserListScreen}
-        options={{ title: 'Users' }}
-      />
-      <Stack.Screen
-        name="UserDetail"
-        component={UserDetailScreen}
-        options={{ title: 'User Detail' }}
-      />
+      {!isLoggedIn ? (
+        <>
+          <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Đăng nhập' }} />
+          <Stack.Screen name="Register" component={RegisterScreen} options={{ title: 'Đăng ký' }} />
+        </>
+      ) : (
+        <>
+          <Stack.Screen name="MainTabs" component={MainTabNavigator} options={{ headerShown: false }} />
+          <Stack.Screen name="ProductList" component={ProductListScreen} options={{ title: 'Sản phẩm' }} />
+          <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ title: 'Chi tiết sản phẩm' }} />
+          <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Thanh toán' }} />
+          <Stack.Screen name="Invoice" component={InvoiceScreen} options={{ title: 'Hoá đơn' }} />
+          <Stack.Screen name="OrderHistory" component={OrderHistoryScreen} options={{ title: 'Lịch sử đơn hàng' }} />
+        </>
+      )}
     </Stack.Navigator>
   );
 }

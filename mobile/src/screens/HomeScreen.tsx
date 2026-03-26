@@ -1,61 +1,32 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../types';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { MainTabParamList } from '../types';
+import { useAuthStore } from '../stores/auth.store';
 
-type HomeScreenProps = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
+type Props = {
+  navigation: BottomTabNavigationProp<MainTabParamList, 'Home'>;
 };
 
-export function HomeScreen({ navigation }: HomeScreenProps) {
+export function HomeScreen({ navigation }: Props) {
+  const user = useAuthStore((state) => state.user);
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to MiniProj</Text>
-      <Text style={styles.subtitle}>React Native + TypeScript + PostgreSQL</Text>
+      <Text style={styles.title}>Xin chào, {user?.fullName ?? user?.username}</Text>
+      <Text style={styles.subtitle}>Chọn danh mục để bắt đầu mua sắm</Text>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate('UserList')}
-      >
-        <Text style={styles.buttonText}>View Users</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Categories')}>
+        <Text style={styles.buttonText}>Xem danh mục</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#f8fafc',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1e293b',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#64748b',
-    marginBottom: 40,
-  },
-  button: {
-    backgroundColor: '#6366f1',
-    paddingHorizontal: 32,
-    paddingVertical: 16,
-    borderRadius: 12,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20, backgroundColor: '#f8fafc' },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#1e293b', marginBottom: 8, textAlign: 'center' },
+  subtitle: { fontSize: 16, color: '#64748b', marginBottom: 24, textAlign: 'center' },
+  button: { backgroundColor: '#6366f1', borderRadius: 10, paddingHorizontal: 20, paddingVertical: 14 },
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
 });

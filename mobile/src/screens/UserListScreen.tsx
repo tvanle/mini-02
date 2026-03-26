@@ -35,7 +35,7 @@ export function UserListScreen({ navigation }: UserListScreenProps) {
       style={styles.userCard}
       onPress={() => navigation.navigate('UserDetail', { userId: item.id })}
     >
-      <Text style={styles.userName}>{item.name}</Text>
+      <Text style={styles.userName}>{item.fullName}</Text>
       <Text style={styles.userEmail}>{item.email}</Text>
     </TouchableOpacity>
   );
