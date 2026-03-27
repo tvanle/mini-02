@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Button, StyleSheet, Text, TextInput, View } from 'react-native';
-import { showAlert } from '../utils/alert';
+import { Alert, Button, StyleSheet, Text, TextInput, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
 import { authService } from '../services/auth.service';
@@ -16,7 +15,7 @@ export function RegisterScreen({ navigation }: Props) {
 
   const onRegister = async () => {
     if (!username || !password || !fullName || !email) {
-      showAlert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
+      Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
       return;
     }
 
@@ -24,7 +23,7 @@ export function RegisterScreen({ navigation }: Props) {
     const res = await authService.register({ username, password, fullName, email });
     setLoading(false);
     if (!res.success) {
-      showAlert('Lỗi', res.error || 'Đăng ký thất bại');
+      Alert.alert('Lỗi', res.error || 'Đăng ký thất bại');
       return;
     }
 

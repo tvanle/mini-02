@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import type { MainTabParamList } from '../types';
 import { HomeScreen } from '../screens/HomeScreen';
 import { MoviesScreen } from '../screens/MoviesScreen';
-import { TheatersScreen } from '../screens/TheatersScreen';
 import { ShowtimesScreen } from '../screens/ShowtimesScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 
@@ -35,8 +34,6 @@ export function MainTabNavigator() {
               return <Ionicons name={focused ? 'home' : 'home-outline'} size={s} color={color} />;
             case 'Movies':
               return <Ionicons name={focused ? 'film' : 'film-outline'} size={s} color={color} />;
-            case 'Theaters':
-              return <Ionicons name={focused ? 'business' : 'business-outline'} size={s} color={color} />;
             case 'Showtimes':
               return <Ionicons name={focused ? 'calendar' : 'calendar-outline'} size={s} color={color} />;
             case 'Profile':
@@ -49,7 +46,6 @@ export function MainTabNavigator() {
     >
       <Tab.Screen name="Home" component={HomeScreen as React.ComponentType<any>} options={{ tabBarLabel: 'Home' }} />
       <Tab.Screen name="Movies" component={MoviesScreen as React.ComponentType<any>} options={{ tabBarLabel: 'Phim' }} />
-      <Tab.Screen name="Theaters" component={TheatersScreen as React.ComponentType<any>} options={{ tabBarLabel: 'Rạp' }} />
       <Tab.Screen name="Showtimes" component={ShowtimesScreen as React.ComponentType<any>} options={{ tabBarLabel: 'Lịch chiếu' }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ tabBarLabel: 'Tài khoản' }} />
     </Tab.Navigator>

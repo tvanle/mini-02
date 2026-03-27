@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { showAlert } from '../utils/alert';
+import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList, Showtime } from '../types';
@@ -17,7 +16,7 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
   const { showtimeId } = route.params;
   const [showtime, setShowtime] = useState<Showtime | null>(null);
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
-  const [selectedSeat, setSelectedSeat] = useState<string | null>(null);
+  const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -31,12 +30,18 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
     })();
   }, [showtimeId]);
 
+  const toggleSeat = (seat: string) => {
+    setSelectedSeats((prev) =>
+      prev.includes(seat) ? prev.filter((s) => s !== seat) : [...prev, seat]
+    );
+  };
+
   const onBook = async () => {
-    if (!selectedSeat) return;
+    if (selectedSeats.length === 0) return;
 
     const user = await getCurrentUser();
     if (!user) {
-      showAlert('Cần đăng nhập', 'Bạn phải đăng nhập để đặt vé.', [
+      Alert.alert('Cần đăng nhập', 'Bạn phải đăng nhập để đặt vé.', [
         { text: 'Huỷ', style: 'cancel' },
         { text: 'Đăng nhập', onPress: () => navigation.navigate('Login') },
       ]);
@@ -44,18 +49,35 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
     }
 
     setLoading(true);
-    const res = await ticketService.bookTicket(showtimeId, selectedSeat);
+
+    // Book all selected seats
+    const results = await Promise.all(
+      selectedSeats.map((seat) => ticketService.bookTicket(showtimeId, seat))
+    );
+
     setLoading(false);
 
-    if (!res.success) {
-      showAlert('Lỗi', res.error || 'Đặt vé thất bại');
-      return;
-    }
+    const successCount = results.filter((r) => r.success).length;
+    const failedSeats = selectedSeats.filter((_, i) => !results[i].success);
 
-    showAlert('Thành công!', `Đặt vé ghế ${selectedSeat} thành công!`, [
-      { text: 'Xem vé', onPress: () => navigation.navigate('MyTickets') },
-    ]);
+    if (failedSeats.length > 0 && successCount > 0) {
+      Alert.alert(
+        'Đặt vé một phần',
+        `Đã đặt ${successCount}/${selectedSeats.length} vé.\nGhế không đặt được: ${failedSeats.join(', ')}`,
+        [{ text: 'Xem vé', onPress: () => navigation.navigate('MyTickets') }]
+      );
+    } else if (successCount === 0) {
+      Alert.alert('Lỗi', results[0]?.error || 'Đặt vé thất bại');
+    } else {
+      Alert.alert(
+        'Thành công!',
+        `Đã đặt ${successCount} vé: ${selectedSeats.join(', ')}`,
+        [{ text: 'Xem vé', onPress: () => navigation.navigate('MyTickets') }]
+      );
+    }
   };
+
+  const clearSelection = () => setSelectedSeats([]);
 
   if (!showtime) return null;
 
@@ -63,6 +85,8 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
     const date = new Date(d + 'T00:00:00');
     return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
   };
+
+  const totalPrice = selectedSeats.length * showtime.price;
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -81,14 +105,14 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
               <Text style={styles.infoText}>{showtime.showTime}</Text>
             </View>
             <View style={styles.infoBadge}>
-              <Text style={styles.priceText}>{showtime.price.toLocaleString('vi-VN')}đ</Text>
+              <Text style={styles.priceText}>{showtime.price.toLocaleString('vi-VN')}đ/ghế</Text>
             </View>
           </View>
         </View>
 
         {/* Screen indicator */}
         <View style={styles.screenIndicator}>
-          <Text style={styles.screenText}>MAN HINH</Text>
+          <Text style={styles.screenText}>MÀN HÌNH</Text>
         </View>
 
         {/* Legend */}
@@ -107,6 +131,16 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
           </View>
         </View>
 
+        {/* Selected seats count */}
+        {selectedSeats.length > 0 && (
+          <View style={styles.selectedInfo}>
+            <Text style={styles.selectedCount}>Đã chọn {selectedSeats.length} ghế</Text>
+            <Pressable onPress={clearSelection}>
+              <Text style={styles.clearText}>Xoá tất cả</Text>
+            </Pressable>
+          </View>
+        )}
+
         {/* Seats grid */}
         <View style={styles.seatsContainer}>
           {ROWS.map((row) => (
@@ -115,7 +149,7 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
               {COLS.map((col) => {
                 const seat = `${row}${col}`;
                 const isBooked = bookedSeats.includes(seat);
-                const isSelected = selectedSeat === seat;
+                const isSelected = selectedSeats.includes(seat);
                 return (
                   <Pressable
                     key={seat}
@@ -126,7 +160,7 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
                       !isBooked && !isSelected && styles.seatAvailable,
                     ]}
                     disabled={isBooked}
-                    onPress={() => setSelectedSeat(isSelected ? null : seat)}
+                    onPress={() => toggleSeat(seat)}
                   >
                     <Text style={[styles.seatText, isBooked && styles.seatTextBooked, isSelected && styles.seatTextSelected]}>
                       {col}
@@ -138,67 +172,119 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
             </View>
           ))}
         </View>
-
-        {/* Booking bar */}
-        {selectedSeat && (
-          <View style={styles.bookingBar}>
-            <View>
-              <Text style={styles.bookSeatLabel}>Ghế: {selectedSeat}</Text>
-              <Text style={styles.bookPrice}>{showtime.price.toLocaleString('vi-VN')}đ</Text>
-            </View>
-            <Pressable style={styles.bookBtn} onPress={onBook} disabled={loading}>
-              <Text style={styles.bookBtnText}>{loading ? 'Đang đặt...' : 'Đặt vé'}</Text>
-            </Pressable>
-          </View>
-        )}
       </ScrollView>
+
+      {/* Booking bar - Fixed at bottom */}
+      {selectedSeats.length > 0 && (
+        <View style={styles.bookingBar}>
+          <View style={styles.bookingInfo}>
+            <View style={styles.seatsPreview}>
+              {selectedSeats.slice(0, 4).map((seat, i) => (
+                <View key={seat} style={styles.seatTag}>
+                  <Text style={styles.seatTagText}>{seat}</Text>
+                </View>
+              ))}
+              {selectedSeats.length > 4 && (
+                <Text style={styles.moreSeats}>+{selectedSeats.length - 4}</Text>
+              )}
+            </View>
+            <View style={styles.priceRow}>
+              <Text style={styles.priceLabel}>{selectedSeats.length} vé × {showtime.price.toLocaleString('vi-VN')}đ</Text>
+              <Text style={styles.totalPrice}>{totalPrice.toLocaleString('vi-VN')}đ</Text>
+            </View>
+          </View>
+          <Pressable style={styles.bookBtn} onPress={onBook} disabled={loading}>
+            <Text style={styles.bookBtnText}>{loading ? 'Đang đặt...' : 'Đặt vé'}</Text>
+          </Pressable>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#f3f4f6' },
-  content: { padding: 16, paddingBottom: 40 },
+  screen: { flex: 1, backgroundColor: '#f8fafc' },
+  content: { padding: 16, paddingBottom: 120 },
   infoCard: {
-    backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 16,
-    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
+    backgroundColor: '#fff', borderRadius: 16, padding: 16, marginBottom: 16,
+    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 10, elevation: 2,
   },
   movieTitle: { fontSize: 20, fontWeight: '800', color: '#111827' },
   theater: { fontSize: 14, color: '#6b7280', marginTop: 4 },
-  infoRow: { flexDirection: 'row', gap: 8, marginTop: 10 },
+  infoRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
   infoBadge: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#eef2ff', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8,
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#eef2ff', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10,
   },
   infoText: { fontSize: 13, fontWeight: '600', color: '#4338ca' },
   priceText: { fontSize: 13, fontWeight: '700', color: '#312e81' },
   screenIndicator: {
-    backgroundColor: '#c7d2fe', borderRadius: 6, paddingVertical: 6, marginBottom: 16, alignItems: 'center',
+    backgroundColor: '#c7d2fe', borderRadius: 8, paddingVertical: 8, marginBottom: 20, alignItems: 'center',
   },
-  screenText: { fontSize: 11, fontWeight: '700', color: '#4338ca', letterSpacing: 3 },
-  legend: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginBottom: 16 },
-  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  legendBox: { width: 20, height: 20, borderRadius: 4 },
-  legendLabel: { fontSize: 11, color: '#6b7280' },
-  seatsContainer: { gap: 6, alignItems: 'center', marginBottom: 20 },
-  seatRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  rowLabel: { width: 16, textAlign: 'center', fontSize: 11, fontWeight: '700', color: '#6b7280' },
-  seat: { width: 28, height: 28, borderRadius: 6, justifyContent: 'center', alignItems: 'center' },
+  screenText: { fontSize: 12, fontWeight: '700', color: '#4338ca', letterSpacing: 4 },
+  legend: { flexDirection: 'row', justifyContent: 'center', gap: 24, marginBottom: 16 },
+  legendItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  legendBox: { width: 24, height: 24, borderRadius: 6 },
+  legendLabel: { fontSize: 13, color: '#6b7280', fontWeight: '500' },
+  selectedInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#eef2ff',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    marginBottom: 16,
+  },
+  selectedCount: { fontSize: 14, fontWeight: '600', color: '#4338ca' },
+  clearText: { fontSize: 13, fontWeight: '600', color: '#ef4444' },
+  seatsContainer: { gap: 8, alignItems: 'center', marginBottom: 20 },
+  seatRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  rowLabel: { width: 20, textAlign: 'center', fontSize: 12, fontWeight: '700', color: '#6b7280' },
+  seat: { width: 30, height: 30, borderRadius: 8, justifyContent: 'center', alignItems: 'center' },
   seatAvailable: { backgroundColor: '#e5e7eb' },
   seatSelected: { backgroundColor: '#4338ca' },
   seatBooked: { backgroundColor: '#fca5a5' },
-  seatText: { fontSize: 10, fontWeight: '700', color: '#374151' },
+  seatText: { fontSize: 11, fontWeight: '700', color: '#374151' },
   seatTextSelected: { color: '#fff' },
   seatTextBooked: { color: '#991b1b' },
   bookingBar: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: '#fff', borderRadius: 14, padding: 16,
-    shadowColor: '#000', shadowOpacity: 0.08, shadowRadius: 10, elevation: 4,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    paddingBottom: 32,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    shadowOffset: { width: 0, height: -5 },
+    elevation: 10,
   },
-  bookSeatLabel: { fontSize: 14, fontWeight: '600', color: '#374151' },
-  bookPrice: { fontSize: 18, fontWeight: '800', color: '#312e81', marginTop: 2 },
+  bookingInfo: { flex: 1, marginRight: 12 },
+  seatsPreview: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 },
+  seatTag: {
+    backgroundColor: '#4338ca',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  seatTagText: { color: '#fff', fontSize: 12, fontWeight: '700' },
+  moreSeats: { fontSize: 12, fontWeight: '600', color: '#6b7280', alignSelf: 'center' },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  priceLabel: { fontSize: 13, color: '#6b7280' },
+  totalPrice: { fontSize: 18, fontWeight: '800', color: '#312e81' },
   bookBtn: {
-    backgroundColor: '#4338ca', borderRadius: 12, paddingHorizontal: 28, paddingVertical: 14,
+    backgroundColor: '#4338ca',
+    borderRadius: 14,
+    paddingHorizontal: 28,
+    paddingVertical: 16,
   },
   bookBtnText: { color: '#fff', fontWeight: '700', fontSize: 16 },
 });
