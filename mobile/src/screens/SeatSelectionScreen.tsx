@@ -4,7 +4,6 @@ import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList, Showtime } from '../types';
 import { showtimeService } from '../services/showtime.service';
-import { ticketService } from '../services/ticket.service';
 import { getCurrentUser } from '../utils/session';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'SeatSelection'>;
@@ -17,7 +16,6 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
   const [showtime, setShowtime] = useState<Showtime | null>(null);
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -36,7 +34,7 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
     );
   };
 
-  const onBook = async () => {
+  const onContinue = async () => {
     if (selectedSeats.length === 0) return;
 
     const user = await getCurrentUser();
@@ -48,33 +46,11 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
       return;
     }
 
-    setLoading(true);
-
-    // Book all selected seats
-    const results = await Promise.all(
-      selectedSeats.map((seat) => ticketService.bookTicket(showtimeId, seat))
-    );
-
-    setLoading(false);
-
-    const successCount = results.filter((r) => r.success).length;
-    const failedSeats = selectedSeats.filter((_, i) => !results[i].success);
-
-    if (failedSeats.length > 0 && successCount > 0) {
-      Alert.alert(
-        'Đặt vé một phần',
-        `Đã đặt ${successCount}/${selectedSeats.length} vé.\nGhế không đặt được: ${failedSeats.join(', ')}`,
-        [{ text: 'Xem vé', onPress: () => navigation.navigate('MyTickets') }]
-      );
-    } else if (successCount === 0) {
-      Alert.alert('Lỗi', results[0]?.error || 'Đặt vé thất bại');
-    } else {
-      Alert.alert(
-        'Thành công!',
-        `Đã đặt ${successCount} vé: ${selectedSeats.join(', ')}`,
-        [{ text: 'Xem vé', onPress: () => navigation.navigate('MyTickets') }]
-      );
-    }
+    // Navigate to Payment screen
+    navigation.navigate('Payment', {
+      showtimeId,
+      seats: selectedSeats,
+    });
   };
 
   const clearSelection = () => setSelectedSeats([]);
@@ -193,8 +169,8 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
               <Text style={styles.totalPrice}>{totalPrice.toLocaleString('vi-VN')}đ</Text>
             </View>
           </View>
-          <Pressable style={styles.bookBtn} onPress={onBook} disabled={loading}>
-            <Text style={styles.bookBtnText}>{loading ? 'Đang đặt...' : 'Đặt vé'}</Text>
+          <Pressable style={styles.bookBtn} onPress={onContinue}>
+            <Text style={styles.bookBtnText}>Tiếp tục</Text>
           </Pressable>
         </View>
       )}

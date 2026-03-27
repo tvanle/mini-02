@@ -55,12 +55,12 @@ export function MoviesScreen({ navigation }: Props) {
       <View style={styles.header}>
         <Text style={styles.title}>Phim</Text>
         <Pressable
-          style={[styles.theaterBtn, selectedTheater && styles.theaterBtnActive]}
+          style={[styles.theaterBtn, selectedTheater !== null && styles.theaterBtnActive]}
           onPress={() => setShowTheaterModal(true)}
         >
-          <Ionicons name="business" size={18} color={selectedTheater ? '#fff' : '#4338ca'} />
-          <Text style={[styles.theaterBtnText, selectedTheater && styles.theaterBtnTextActive]}>
-            {selectedTheater ? 'Rạp' : 'Chọn rạp'}
+          <Ionicons name="business" size={18} color={selectedTheater !== null ? '#fff' : '#4338ca'} />
+          <Text style={[styles.theaterBtnText, selectedTheater !== null && styles.theaterBtnTextActive]}>
+            {selectedTheater !== null ? 'Rạp' : 'Chọn rạp'}
           </Text>
         </Pressable>
       </View>
@@ -96,25 +96,26 @@ export function MoviesScreen({ navigation }: Props) {
       )}
 
       {/* Genre Filter */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.chipList}
-        style={styles.chipScroll}
-      >
-        {['Tất cả', ...genres].map((item) => {
-          const isActive = item === 'Tất cả' ? !selectedGenre : selectedGenre === item;
-          return (
-            <Pressable
-              key={item}
-              style={[styles.chip, isActive && styles.chipActive]}
-              onPress={() => setSelectedGenre(item === 'Tất cả' ? null : item)}
-            >
-              <Text style={[styles.chipText, isActive && styles.chipTextActive]}>{item}</Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      <View style={styles.chipContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.chipList}
+        >
+          {['Tất cả', ...genres].map((item) => {
+            const isActive = item === 'Tất cả' ? !selectedGenre : selectedGenre === item;
+            return (
+              <Pressable
+                key={item}
+                style={[styles.chip, isActive && styles.chipActive]}
+                onPress={() => setSelectedGenre(item === 'Tất cả' ? null : item)}
+              >
+                <Text style={[styles.chipText, isActive && styles.chipTextActive]}>{item}</Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {/* Results count */}
       <Text style={styles.resultCount}>{filtered.length} phim</Text>
@@ -269,22 +270,33 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   selectedTheaterText: { fontSize: 13, fontWeight: '600', color: '#4338ca' },
-  chipScroll: { flexGrow: 0, marginBottom: 8 },
-  chipList: { gap: 10, paddingHorizontal: 16, paddingVertical: 4 },
+  chipContainer: {
+    height: 56,
+    marginBottom: 12,
+  },
+  chipList: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    height: 56,
+  },
   chip: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 24,
+    height: 44,
+    paddingHorizontal: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 22,
     backgroundColor: '#fff',
     borderWidth: 1.5,
     borderColor: '#e5e7eb',
     shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   chipActive: { backgroundColor: '#4338ca', borderColor: '#4338ca' },
-  chipText: { fontSize: 14, fontWeight: '600', color: '#374151' },
+  chipText: { fontSize: 15, fontWeight: '600', color: '#374151' },
   chipTextActive: { color: '#fff' },
   resultCount: {
     fontSize: 13,

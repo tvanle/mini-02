@@ -6,6 +6,7 @@ import { RegisterScreen } from '../screens/RegisterScreen';
 import { MovieDetailScreen } from '../screens/MovieDetailScreen';
 import { ShowtimeListScreen } from '../screens/ShowtimeListScreen';
 import { SeatSelectionScreen } from '../screens/SeatSelectionScreen';
+import { PaymentScreen } from '../screens/PaymentScreen';
 import { MyTicketsScreen } from '../screens/MyTicketsScreen';
 import { getCurrentUser } from '../utils/session';
 import { MainTabNavigator } from './MainTabNavigator';
@@ -32,6 +33,7 @@ export function AppNavigator() {
       <Stack.Screen name="MovieDetail" component={MovieDetailScreen} options={{ title: 'Chi tiết phim' }} />
       <Stack.Screen name="ShowtimeList" component={ShowtimeListScreen} options={{ title: 'Lịch chiếu' }} />
       <Stack.Screen name="SeatSelection" component={SeatSelectionScreen} options={{ title: 'Chọn ghế' }} />
+      <Stack.Screen name="Payment" component={PaymentScreen} options={{ title: 'Thanh toán' }} />
       <Stack.Screen name="MyTickets" component={MyTicketsScreen} options={{ title: 'Vé của tôi' }} />
     </Stack.Navigator>
   );

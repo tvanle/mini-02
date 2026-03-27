@@ -97,58 +97,60 @@ export function ShowtimesScreen({ navigation }: Props) {
       </View>
 
       {/* Date Filter */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.dateList}
-        style={styles.dateScroll}
-      >
-        {['Tất cả', ...dates].map((item) => {
-          const isAll = item === 'Tất cả';
-          const isActive = isAll ? !selectedDate : selectedDate === item;
-          return (
-            <Pressable
-              key={item}
-              style={[styles.dateChip, isActive && styles.dateChipActive]}
-              onPress={() => setSelectedDate(isAll ? null : item)}
-            >
-              {isAll ? (
-                <Text style={[styles.dateDay, isActive && styles.dateDayActive]}>Tất cả</Text>
-              ) : (
-                <>
-                  <Text style={[styles.dateDayName, isActive && styles.dateDayActive]}>{getDayName(item)}</Text>
-                  <Text style={[styles.dateDay, isActive && styles.dateDayActive]}>{formatDate(item)}</Text>
-                </>
-              )}
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+      <View style={styles.dateContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.dateList}
+        >
+          {['Tất cả', ...dates].map((item) => {
+            const isAll = item === 'Tất cả';
+            const isActive = isAll ? !selectedDate : selectedDate === item;
+            return (
+              <Pressable
+                key={item}
+                style={[styles.dateChip, isActive && styles.dateChipActive]}
+                onPress={() => setSelectedDate(isAll ? null : item)}
+              >
+                {isAll ? (
+                  <Text style={[styles.dateDay, isActive && styles.dateDayActive]}>Tất cả</Text>
+                ) : (
+                  <>
+                    <Text style={[styles.dateDayName, isActive && styles.dateDayActive]}>{getDayName(item)}</Text>
+                    <Text style={[styles.dateDay, isActive && styles.dateDayActive]}>{formatDate(item)}</Text>
+                  </>
+                )}
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {/* Quick Time Slot Filter */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.timeSlotList}
-        style={styles.timeSlotScroll}
-      >
-        {timeSlots.map((slot) => (
-          <Pressable
-            key={slot.key}
-            style={[styles.timeSlotChip, selectedTimeSlot === slot.key && styles.timeSlotChipActive]}
-            onPress={() => setSelectedTimeSlot(slot.key)}
-          >
-            <Ionicons
-              name={slot.icon as any}
-              size={18}
-              color={selectedTimeSlot === slot.key ? '#fff' : '#6b7280'}
-            />
-            <Text style={[styles.timeSlotText, selectedTimeSlot === slot.key && styles.timeSlotTextActive]}>
-              {slot.label}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+      <View style={styles.timeSlotContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.timeSlotList}
+        >
+          {timeSlots.map((slot) => (
+            <Pressable
+              key={slot.key}
+              style={[styles.timeSlotChip, selectedTimeSlot === slot.key && styles.timeSlotChipActive]}
+              onPress={() => setSelectedTimeSlot(slot.key)}
+            >
+              <Ionicons
+                name={slot.icon as any}
+                size={18}
+                color={selectedTimeSlot === slot.key ? '#fff' : '#6b7280'}
+              />
+              <Text style={[styles.timeSlotText, selectedTimeSlot === slot.key && styles.timeSlotTextActive]}>
+                {slot.label}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
 
       {/* Active Filters Display */}
       {(selectedTheater || selectedTimeSlot !== 'all') && (
@@ -335,45 +337,66 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   filterBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
-  dateScroll: { flexGrow: 0, marginBottom: 12 },
-  dateList: { gap: 10, paddingHorizontal: 16, paddingVertical: 4 },
+  dateContainer: {
+    height: 72,
+    marginBottom: 12,
+  },
+  dateList: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    height: 72,
+  },
   dateChip: {
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+    height: 60,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 16,
     backgroundColor: '#fff',
     borderWidth: 1.5,
     borderColor: '#e5e7eb',
     alignItems: 'center',
-    minWidth: 70,
+    justifyContent: 'center',
+    minWidth: 75,
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  dateChipActive: { backgroundColor: '#4338ca', borderColor: '#4338ca' },
+  dateDayName: { fontSize: 13, fontWeight: '600', color: '#6b7280' },
+  dateDay: { fontSize: 16, fontWeight: '700', color: '#111827', marginTop: 2 },
+  dateDayActive: { color: '#fff' },
+  timeSlotContainer: {
+    height: 56,
+    marginBottom: 12,
+  },
+  timeSlotList: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingHorizontal: 16,
+    height: 56,
+  },
+  timeSlotChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 44,
+    paddingHorizontal: 20,
+    borderRadius: 22,
+    backgroundColor: '#fff',
+    borderWidth: 1.5,
+    borderColor: '#e5e7eb',
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 6,
     elevation: 2,
   },
-  dateChipActive: { backgroundColor: '#4338ca', borderColor: '#4338ca' },
-  dateDayName: { fontSize: 12, fontWeight: '600', color: '#6b7280' },
-  dateDay: { fontSize: 15, fontWeight: '700', color: '#111827', marginTop: 2 },
-  dateDayActive: { color: '#fff' },
-  timeSlotScroll: { flexGrow: 0, marginBottom: 12 },
-  timeSlotList: { gap: 10, paddingHorizontal: 16, paddingVertical: 4 },
-  timeSlotChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 24,
-    backgroundColor: '#fff',
-    borderWidth: 1.5,
-    borderColor: '#e5e7eb',
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 1,
-  },
   timeSlotChipActive: { backgroundColor: '#4338ca', borderColor: '#4338ca' },
-  timeSlotText: { fontSize: 14, fontWeight: '600', color: '#6b7280' },
+  timeSlotText: { fontSize: 15, fontWeight: '600', color: '#6b7280' },
   timeSlotTextActive: { color: '#fff' },
   activeFilters: {
     flexDirection: 'row',
