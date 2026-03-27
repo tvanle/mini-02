@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { showAlert } from '../utils/alert';
 import { Ionicons } from '@expo/vector-icons';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList, Showtime } from '../types';
@@ -35,7 +36,7 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
 
     const user = await getCurrentUser();
     if (!user) {
-      Alert.alert('Cần đăng nhập', 'Bạn phải đăng nhập để đặt vé.', [
+      showAlert('Cần đăng nhập', 'Bạn phải đăng nhập để đặt vé.', [
         { text: 'Huỷ', style: 'cancel' },
         { text: 'Đăng nhập', onPress: () => navigation.navigate('Login') },
       ]);
@@ -47,11 +48,11 @@ export function SeatSelectionScreen({ route, navigation }: Props) {
     setLoading(false);
 
     if (!res.success) {
-      Alert.alert('Lỗi', res.error || 'Đặt vé thất bại');
+      showAlert('Lỗi', res.error || 'Đặt vé thất bại');
       return;
     }
 
-    Alert.alert('Thành công!', `Đặt vé ghế ${selectedSeat} thành công!`, [
+    showAlert('Thành công!', `Đặt vé ghế ${selectedSeat} thành công!`, [
       { text: 'Xem vé', onPress: () => navigation.navigate('MyTickets') },
     ]);
   };

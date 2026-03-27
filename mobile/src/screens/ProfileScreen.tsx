@@ -1,5 +1,6 @@
 import React from 'react';
-import { Alert, Image, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { showAlert } from '../utils/alert';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -37,7 +38,7 @@ export function ProfileScreen() {
   );
 
   const onLogout = () => {
-    Alert.alert('Xác nhận', 'Bạn muốn đăng xuất?', [
+    showAlert('Xác nhận', 'Bạn muốn đăng xuất?', [
       { text: 'Huỷ', style: 'cancel' },
       {
         text: 'Đăng xuất',
