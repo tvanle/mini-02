@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Alert, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { showAlert } from '../utils/alert';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -19,7 +20,7 @@ export function LoginScreen({ navigation }: Props) {
     const res = await authService.login({ username, password });
     setLoading(false);
     if (!res.success) {
-      Alert.alert('Lỗi', res.error || 'Đăng nhập thất bại');
+      showAlert('Lỗi', res.error || 'Đăng nhập thất bại');
       return;
     }
     navigation.replace('MainTabs');
