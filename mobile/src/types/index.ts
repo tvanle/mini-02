@@ -12,71 +12,71 @@ export interface User {
   createdAt: string;
 }
 
-export interface Category {
+export interface Movie {
   id: number;
-  name: string;
+  title: string;
   description: string | null;
-  image: string | null;
+  genre: string;
+  duration: number; // phút
+  poster: string | null;
+  rating: number; // 0-10
+  releaseDate: string;
 }
 
-export interface Product {
+export interface Theater {
   id: number;
   name: string;
-  description: string | null;
+  address: string;
+  totalSeats: number;
+}
+
+export interface Showtime {
+  id: number;
+  movieId: number;
+  theaterId: number;
+  showDate: string; // YYYY-MM-DD
+  showTime: string; // HH:mm
   price: number;
-  image: string | null;
-  categoryId: number;
-  stock: number;
-  soldCount?: number;
-  images?: ProductImage[];
+  // joined fields
+  movieTitle?: string;
+  moviePoster?: string;
+  movieDuration?: number;
+  movieGenre?: string;
+  theaterName?: string;
+  theaterAddress?: string;
 }
 
-export interface ProductImage {
-  id: number;
-  productId: number;
-  colorHex: string;
-  imageUrl: string;
-  sortOrder: number;
-}
-
-export interface OrderDetail {
-  id: number;
-  orderId: number;
-  productId: number;
-  quantity: number;
-  unitPrice: number;
-  subtotal: number;
-  productName: string;
-  productImage?: string | null;
-}
-
-export type OrderStatus = 'Pending' | 'Paid';
-
-export interface Order {
+export interface Ticket {
   id: number;
   userId: number;
-  createdAt: string;
-  status: OrderStatus;
-  totalAmount: number;
-  items: OrderDetail[];
+  showtimeId: number;
+  seatNumber: string;
+  bookingTime: string;
+  // joined fields
+  movieTitle?: string;
+  moviePoster?: string;
+  theaterName?: string;
+  showDate?: string;
+  showTime?: string;
+  price?: number;
 }
 
 export type RootStackParamList = {
   MainTabs: undefined;
   Login: undefined;
   Register: undefined;
-  Categories: undefined;
-  ProductList: { categoryId?: number; categoryName?: string } | undefined;
-  ProductDetail: { productId: number };
-  Cart: undefined;
-  Checkout: undefined;
-  OrderHistory: undefined;
+  MovieDetail: { movieId: number };
+  TheaterDetail: { theaterId: number };
+  ShowtimeList: { movieId?: number; theaterId?: number } | undefined;
+  SeatSelection: { showtimeId: number };
+  TicketDetail: { ticketId: number };
+  MyTickets: undefined;
 };
 
 export type MainTabParamList = {
   Home: undefined;
-  Explore: undefined;
-  Cart: undefined;
-  Orders: undefined;
+  Movies: undefined;
+  Theaters: undefined;
+  Showtimes: undefined;
   Profile: undefined;
 };

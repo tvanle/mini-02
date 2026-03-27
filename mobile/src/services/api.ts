@@ -1,4 +1,5 @@
 export { authService } from './auth.service';
-export { categoryService } from './category.service';
-export { productService } from './product.service';
-export { orderService } from './order.service';
+export { movieService } from './movie.service';
+export { theaterService } from './theater.service';
+export { showtimeService } from './showtime.service';
+export { ticketService } from './ticket.service';

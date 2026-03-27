@@ -1,157 +1,127 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FlatList, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import type { Category, Product } from '../types';
-import { categoryService } from '../services/category.service';
-import { productService } from '../services/product.service';
+import { FlatList, Image, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import type { Movie } from '../types';
+import { movieService } from '../services/movie.service';
 
 type Props = {
-  navigation: {
-    navigate: (screen: string, params?: object) => void;
-  };
+  navigation: { navigate: (screen: string, params?: object) => void };
 };
 
 export function HomeScreen({ navigation }: Props) {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [products, setProducts] = useState<Product[]>([]);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [genres, setGenres] = useState<string[]>([]);
 
   useEffect(() => {
     (async () => {
-      const [catRes, productRes] = await Promise.all([categoryService.getAll(), productService.getAll()]);
-      if (catRes.success && catRes.data) setCategories(catRes.data);
-      if (productRes.success && productRes.data) setProducts(productRes.data);
+      const [moviesRes, genresRes] = await Promise.all([movieService.getAll(), movieService.getGenres()]);
+      if (moviesRes.success && moviesRes.data) setMovies(moviesRes.data);
+      if (genresRes.success && genresRes.data) setGenres(genresRes.data);
     })();
   }, []);
-  const featured = useMemo(() => products.slice(0, 4), [products]);
-  const trending = useMemo(() => products.slice(2, 10), [products]);
-  const newArrival = useMemo(() => products.slice(5, 13), [products]);
+
+  const nowShowing = useMemo(() => movies.slice(0, 4), [movies]);
+  const topRated = useMemo(() => [...movies].sort((a, b) => b.rating - a.rating).slice(0, 6), [movies]);
+
+  const genreIcon: Record<string, string> = {
+    Action: 'flash',
+    Animation: 'color-palette',
+    Thriller: 'skull',
+    'Sci-Fi': 'planet',
+    Horror: 'moon',
+    Drama: 'heart',
+  };
 
   return (
     <SafeAreaView style={styles.screen}>
       <ScrollView contentContainerStyle={styles.content}>
-      <View style={styles.header}>
-        <Text style={styles.brand}>The Digital Concierge</Text>
-        <Pressable onPress={() => navigation.navigate('Cart')}>
-          <Text style={styles.cartIcon}>🛒</Text>
-        </Pressable>
-      </View>
-
-      <TextInput placeholder="Search for products..." style={styles.search} />
-
-      <FlatList
-        horizontal
-        data={categories}
-        keyExtractor={(item) => String(item.id)}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.categoryList}
-        renderItem={({ item }) => (
-          <Pressable
-            style={styles.categoryItem}
-            onPress={() => navigation.navigate('ProductList', { categoryId: item.id, categoryName: item.name })}
-          >
-            <View style={styles.categoryIconWrap}>
-              <Text style={styles.categoryIcon}>📦</Text>
-            </View>
-            <Text style={styles.categoryName}>{item.name}</Text>
+        <View style={styles.header}>
+          <Text style={styles.brand}>CineTicket</Text>
+          <Pressable onPress={() => navigation.navigate('MyTickets')}>
+            <Ionicons name="ticket-outline" size={26} color="#4338ca" />
           </Pressable>
-        )}
-      />
-
-      <View style={styles.promoRow}>
-        <View style={[styles.promoCard, styles.promoBig]}>
-          <Text style={styles.promoTitle}>Summer Essentials</Text>
-          <Text style={styles.promoSub}>Up to 40% Off</Text>
         </View>
-        <View style={styles.promoRight}>
-          <View style={[styles.promoCard, styles.promoSmallTop]}>
-            <Text style={styles.promoSmallTitle}>New Drop</Text>
-            <Text style={styles.promoSmallText}>Active Wear</Text>
-          </View>
-          <View style={[styles.promoCard, styles.promoSmallBottom]}>
-            <Text style={styles.promoSmallTitle}>Flash Sale</Text>
-            <Text style={styles.promoSmallText}>Limited Time</Text>
-          </View>
-        </View>
-      </View>
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Featured Products</Text>
-        <Pressable onPress={() => navigation.navigate('ProductList')}>
-          <Text style={styles.link}>View All</Text>
-        </Pressable>
-      </View>
-
-      <View style={styles.grid}>
-        {featured.map((item) => (
-          <Pressable key={item.id} style={styles.productCard} onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}>
-            <Image
-              source={{ uri: item.image || 'https://picsum.photos/seed/home-fallback/500/500' }}
-              style={styles.thumb}
-              resizeMode="cover"
-            />
-            <Text style={styles.productName} numberOfLines={1}>
-              {item.name}
-            </Text>
-            <Text style={styles.price}>${(item.price / 23000).toFixed(2)}</Text>
-            <Pressable style={styles.primaryBtn} onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}>
-              <Text style={styles.primaryBtnText}>Add to Cart</Text>
+        {/* Genre chips */}
+        <FlatList
+          horizontal
+          data={genres}
+          keyExtractor={(item) => item}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.genreList}
+          renderItem={({ item }) => (
+            <Pressable style={styles.genreChip} onPress={() => navigation.navigate('Movies')}>
+              <View style={styles.genreIconWrap}>
+                <Ionicons name={(genreIcon[item] || 'film') as any} size={18} color="#4338ca" />
+              </View>
+              <Text style={styles.genreName}>{item}</Text>
             </Pressable>
-          </Pressable>
-        ))}
-      </View>
+          )}
+        />
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Trending</Text>
-        <Pressable onPress={() => navigation.navigate('ProductList')}>
-          <Text style={styles.link}>View All</Text>
-        </Pressable>
-      </View>
-      <FlatList
-        horizontal
-        data={trending}
-        keyExtractor={(item) => `tr-${item.id}`}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.sliderList}
-        renderItem={({ item }) => (
-          <Pressable style={styles.sliderCard} onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}>
-            <Image
-              source={{ uri: item.image || 'https://picsum.photos/seed/slider-fallback/500/500' }}
-              style={styles.sliderThumb}
-              resizeMode="cover"
-            />
-            <Text style={styles.sliderName} numberOfLines={2}>
-              {item.name}
-            </Text>
-            <Text style={styles.sliderPrice}>${(item.price / 23000).toFixed(2)}</Text>
-          </Pressable>
-        )}
-      />
+        {/* Promo banner */}
+        <View style={styles.promoBanner}>
+          <Text style={styles.promoTitle}>Phim hay tuần này</Text>
+          <Text style={styles.promoSub}>Đặt vé ngay - Nhiều suất chiếu mỗi ngày</Text>
+        </View>
 
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>New Arrivals</Text>
-        <Pressable onPress={() => navigation.navigate('ProductList')}>
-          <Text style={styles.link}>View All</Text>
-        </Pressable>
-      </View>
-      <FlatList
-        horizontal
-        data={newArrival}
-        keyExtractor={(item) => `new-${item.id}`}
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.sliderList}
-        renderItem={({ item }) => (
-          <Pressable style={styles.sliderCard} onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}>
-            <Image
-              source={{ uri: item.image || 'https://picsum.photos/seed/slider2-fallback/500/500' }}
-              style={styles.sliderThumb}
-              resizeMode="cover"
-            />
-            <Text style={styles.sliderName} numberOfLines={2}>
-              {item.name}
-            </Text>
-            <Text style={styles.sliderPrice}>${(item.price / 23000).toFixed(2)}</Text>
+        {/* Now Showing */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Đang Chiếu</Text>
+          <Pressable onPress={() => navigation.navigate('Movies')}>
+            <Text style={styles.link}>Xem tất cả</Text>
           </Pressable>
-        )}
-      />
+        </View>
+
+        <View style={styles.grid}>
+          {nowShowing.map((movie) => (
+            <Pressable key={movie.id} style={styles.movieCard} onPress={() => navigation.navigate('MovieDetail', { movieId: movie.id })}>
+              <Image
+                source={{ uri: movie.poster || 'https://picsum.photos/seed/movie-fallback/400/600' }}
+                style={styles.poster}
+                resizeMode="cover"
+              />
+              <Text style={styles.movieTitle} numberOfLines={1}>{movie.title}</Text>
+              <View style={styles.movieMeta}>
+                <Ionicons name="star" size={12} color="#f59e0b" />
+                <Text style={styles.rating}>{movie.rating}</Text>
+                <Text style={styles.duration}>{movie.duration} phút</Text>
+              </View>
+              <View style={styles.genreTag}>
+                <Text style={styles.genreTagText}>{movie.genre}</Text>
+              </View>
+            </Pressable>
+          ))}
+        </View>
+
+        {/* Top Rated */}
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Đánh giá cao</Text>
+          <Pressable onPress={() => navigation.navigate('Movies')}>
+            <Text style={styles.link}>Xem tất cả</Text>
+          </Pressable>
+        </View>
+        <FlatList
+          horizontal
+          data={topRated}
+          keyExtractor={(item) => `top-${item.id}`}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.sliderList}
+          renderItem={({ item }) => (
+            <Pressable style={styles.sliderCard} onPress={() => navigation.navigate('MovieDetail', { movieId: item.id })}>
+              <Image
+                source={{ uri: item.poster || 'https://picsum.photos/seed/top-fallback/400/600' }}
+                style={styles.sliderPoster}
+                resizeMode="cover"
+              />
+              <Text style={styles.sliderTitle} numberOfLines={2}>{item.title}</Text>
+              <View style={styles.movieMeta}>
+                <Ionicons name="star" size={12} color="#f59e0b" />
+                <Text style={styles.rating}>{item.rating}</Text>
+              </View>
+            </Pressable>
+          )}
+        />
       </ScrollView>
     </SafeAreaView>
   );
@@ -159,53 +129,35 @@ export function HomeScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#f3f4f6' },
-  content: { padding: 16, paddingBottom: 24 },
+  content: { padding: 16, paddingBottom: 100 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  brand: { fontSize: 22, fontWeight: '700', color: '#312e81' },
-  cartIcon: { fontSize: 24 },
-  search: {
-    backgroundColor: '#e5e7eb',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 14,
+  brand: { fontSize: 24, fontWeight: '800', color: '#312e81' },
+  genreList: { gap: 10, paddingBottom: 12 },
+  genreChip: { alignItems: 'center', width: 72 },
+  genreIconWrap: {
+    width: 48, height: 48, borderRadius: 14, backgroundColor: '#eef2ff',
+    justifyContent: 'center', alignItems: 'center', marginBottom: 4,
   },
-  categoryList: { gap: 12, paddingBottom: 10 },
-  categoryItem: { alignItems: 'center', width: 80 },
-  categoryIconWrap: {
-    width: 50,
-    height: 50,
-    borderRadius: 14,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 6,
+  genreName: { fontSize: 11, color: '#374151', fontWeight: '600' },
+  promoBanner: {
+    backgroundColor: '#4338ca', borderRadius: 18, padding: 20, marginBottom: 18,
   },
-  categoryIcon: { fontSize: 20 },
-  categoryName: { fontSize: 12, textAlign: 'center' },
-  promoRow: { flexDirection: 'row', gap: 10, marginBottom: 18 },
-  promoCard: { borderRadius: 18, padding: 14 },
-  promoBig: { flex: 1, backgroundColor: '#4338ca', minHeight: 170 },
-  promoRight: { width: 145, gap: 10 },
-  promoSmallTop: { flex: 1, backgroundColor: '#f5d7b8' },
-  promoSmallBottom: { flex: 1, backgroundColor: '#65f085' },
-  promoTitle: { color: '#fff', fontSize: 25, fontWeight: '700' },
-  promoSub: { color: '#ddd6fe', marginTop: 8, fontSize: 14 },
-  promoSmallTitle: { fontSize: 16, fontWeight: '700', textTransform: 'uppercase' },
-  promoSmallText: { marginTop: 6, fontWeight: '500' },
+  promoTitle: { color: '#fff', fontSize: 22, fontWeight: '700' },
+  promoSub: { color: '#c7d2fe', marginTop: 6, fontSize: 13 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  sectionTitle: { fontSize: 24, fontWeight: '700', color: '#111827' },
-  link: { color: '#4338ca', fontWeight: '600' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12 },
-  productCard: { width: '48.5%', backgroundColor: '#fff', borderRadius: 14, padding: 10 },
-  thumb: { height: 98, borderRadius: 10, backgroundColor: '#f1f5f9', marginBottom: 8 },
-  productName: { fontSize: 14, color: '#1f2937' },
-  price: { marginTop: 4, fontSize: 22, fontWeight: '700', color: '#111827' },
-  primaryBtn: { marginTop: 8, backgroundColor: '#4338ca', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
-  primaryBtnText: { color: '#fff', fontWeight: '600' },
+  sectionTitle: { fontSize: 20, fontWeight: '700', color: '#111827' },
+  link: { color: '#4338ca', fontWeight: '600', fontSize: 13 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', rowGap: 12, marginBottom: 18 },
+  movieCard: { width: '48%', backgroundColor: '#fff', borderRadius: 14, padding: 8, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  poster: { height: 160, borderRadius: 10, backgroundColor: '#e5e7eb', marginBottom: 8 },
+  movieTitle: { fontSize: 14, fontWeight: '700', color: '#111827' },
+  movieMeta: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  rating: { fontSize: 12, fontWeight: '700', color: '#f59e0b' },
+  duration: { fontSize: 11, color: '#6b7280', marginLeft: 6 },
+  genreTag: { marginTop: 6, backgroundColor: '#eef2ff', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, alignSelf: 'flex-start' },
+  genreTagText: { fontSize: 10, fontWeight: '700', color: '#4338ca' },
   sliderList: { gap: 10, paddingBottom: 8 },
-  sliderCard: { width: 180, backgroundColor: '#fff', borderRadius: 14, padding: 10 },
-  sliderThumb: { height: 96, borderRadius: 10, backgroundColor: '#eef2ff', marginBottom: 8 },
-  sliderName: { fontSize: 14, fontWeight: '700', color: '#111827', minHeight: 34 },
-  sliderPrice: { fontSize: 20, fontWeight: '800', color: '#312e81', marginTop: 4 },
+  sliderCard: { width: 150, backgroundColor: '#fff', borderRadius: 14, padding: 8, shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+  sliderPoster: { height: 180, borderRadius: 10, backgroundColor: '#e5e7eb', marginBottom: 6 },
+  sliderTitle: { fontSize: 13, fontWeight: '700', color: '#111827', minHeight: 34 },
 });
