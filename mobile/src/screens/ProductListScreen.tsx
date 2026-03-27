@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Product, RootStackParamList } from '../types';
 import { useProductStore } from '../stores/product.store';
@@ -35,7 +36,7 @@ export function ProductListScreen({ route, navigation }: Props) {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color="#6d28d9" />
       </View>
     );
   }
@@ -50,11 +51,17 @@ export function ProductListScreen({ route, navigation }: Props) {
 
   return (
     <View style={styles.container}>
+      <LinearGradient colors={['#8b5cf6', '#6d28d9']} style={styles.banner}>
+        <Text style={styles.bannerTitle}>{title}</Text>
+        <Text style={styles.bannerText}>Khám phá sản phẩm theo phong cách card-based hiện đại.</Text>
+      </LinearGradient>
+
       <TextInput
         placeholder="Tìm kiếm sản phẩm..."
         value={search}
         onChangeText={setSearch}
         style={styles.searchInput}
+        placeholderTextColor="#94a3b8"
       />
 
       <FlatList
@@ -74,29 +81,52 @@ export function ProductListScreen({ route, navigation }: Props) {
             </TouchableOpacity>
           </TouchableOpacity>
         )}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        contentContainerStyle={{ paddingBottom: 120 }}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#f8fafc' },
+  container: { flex: 1, paddingHorizontal: 16, paddingTop: 8, backgroundColor: '#f4f6ff' },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  banner: {
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 12,
+    shadowColor: '#5b21b6',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 18,
+    elevation: 7,
+  },
+  bannerTitle: { color: '#fff', fontSize: 22, fontWeight: '700', marginBottom: 4 },
+  bannerText: { color: '#ede9fe', lineHeight: 20 },
   searchInput: {
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 10,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 11,
     marginBottom: 12,
+    color: '#111827',
   },
-  card: { backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 12 },
-  name: { fontSize: 16, fontWeight: '700', color: '#1e293b' },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 15,
+    marginBottom: 12,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 3,
+  },
+  name: { fontSize: 16, fontWeight: '700', color: '#111827' },
   price: { marginTop: 4, color: '#16a34a', fontWeight: '700' },
   stock: { marginTop: 4, color: '#64748b' },
-  addButton: { marginTop: 10, backgroundColor: '#6366f1', borderRadius: 8, paddingVertical: 10, alignItems: 'center' },
-  addButtonText: { color: '#fff', fontWeight: '600' },
+  addButton: { marginTop: 10, backgroundColor: '#6d28d9', borderRadius: 10, paddingVertical: 11, alignItems: 'center' },
+  addButtonText: { color: '#fff', fontWeight: '700' },
   errorText: { color: '#ef4444', fontSize: 16 },
 });

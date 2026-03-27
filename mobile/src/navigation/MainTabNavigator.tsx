@@ -12,9 +12,29 @@ export function MainTabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: '#6366f1' },
-        headerTintColor: '#fff',
-        tabBarActiveTintColor: '#6366f1',
+        headerStyle: { backgroundColor: '#ffffff' },
+        headerTintColor: '#111827',
+        headerTitleStyle: { fontWeight: '700' },
+        headerShadowVisible: false,
+        tabBarActiveTintColor: '#6d28d9',
+        tabBarInactiveTintColor: '#94a3b8',
+        tabBarStyle: {
+          position: 'absolute',
+          left: 12,
+          right: 12,
+          bottom: 12,
+          borderRadius: 18,
+          backgroundColor: '#ffffff',
+          height: 62,
+          paddingBottom: 8,
+          paddingTop: 8,
+          borderTopWidth: 0,
+          shadowColor: '#0f172a',
+          shadowOffset: { width: 0, height: 12 },
+          shadowOpacity: 0.08,
+          shadowRadius: 16,
+          elevation: 8,
+        },
       }}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Trang chủ' }} />

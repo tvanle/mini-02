@@ -20,9 +20,11 @@ export function RootNavigator() {
     <Stack.Navigator
       initialRouteName={isLoggedIn ? 'MainTabs' : 'Login'}
       screenOptions={{
-        headerStyle: { backgroundColor: '#6366f1' },
-        headerTintColor: '#fff',
-        headerTitleStyle: { fontWeight: 'bold' },
+        headerStyle: { backgroundColor: '#ffffff' },
+        headerTintColor: '#111827',
+        headerTitleStyle: { fontWeight: '700' },
+        headerShadowVisible: false,
+        contentStyle: { backgroundColor: '#f4f6ff' },
       }}
     >
       {!isLoggedIn ? (

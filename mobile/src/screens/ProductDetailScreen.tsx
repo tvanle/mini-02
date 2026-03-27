@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
 import { useProductStore } from '../stores/product.store';
@@ -16,10 +17,7 @@ export function ProductDetailScreen({ route }: Props) {
   }, [route.params.productId, fetchProductById]);
 
   const onAdd = async () => {
-    if (!productDetail) {
-      return;
-    }
-
+    if (!productDetail) return;
     try {
       await addToCart(productDetail.id, 1);
       Alert.alert('Thành công', 'Đã thêm vào giỏ hàng');
@@ -31,7 +29,7 @@ export function ProductDetailScreen({ route }: Props) {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#6366f1" />
+        <ActivityIndicator size="large" color="#6d28d9" />
       </View>
     );
   }
@@ -46,10 +44,16 @@ export function ProductDetailScreen({ route }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.name}>{productDetail.name}</Text>
-      <Text style={styles.price}>{productDetail.price.toLocaleString('vi-VN')} đ</Text>
-      <Text style={styles.description}>{productDetail.description ?? 'Không có mô tả'}</Text>
-      <Text style={styles.stock}>Tồn kho: {productDetail.stock}</Text>
+      <LinearGradient colors={['#8b5cf6', '#6d28d9']} style={styles.banner}>
+        <Text style={styles.name}>{productDetail.name}</Text>
+        <Text style={styles.price}>{productDetail.price.toLocaleString('vi-VN')} đ</Text>
+      </LinearGradient>
+
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle}>Mô tả</Text>
+        <Text style={styles.description}>{productDetail.description ?? 'Không có mô tả'}</Text>
+        <Text style={styles.stock}>Tồn kho: {productDetail.stock}</Text>
+      </View>
 
       <TouchableOpacity style={styles.button} onPress={onAdd}>
         <Text style={styles.buttonText}>Thêm vào giỏ hàng</Text>
@@ -59,13 +63,33 @@ export function ProductDetailScreen({ route }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, backgroundColor: '#f8fafc' },
+  container: { flex: 1, padding: 16, backgroundColor: '#f4f6ff', gap: 12 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  name: { fontSize: 24, fontWeight: '700', color: '#1e293b', marginBottom: 8 },
-  price: { fontSize: 20, color: '#16a34a', fontWeight: '700', marginBottom: 12 },
-  description: { fontSize: 16, color: '#475569', marginBottom: 12 },
-  stock: { color: '#64748b', marginBottom: 20 },
-  button: { backgroundColor: '#6366f1', borderRadius: 10, paddingVertical: 14, alignItems: 'center' },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 16 },
+  banner: {
+    borderRadius: 20,
+    padding: 18,
+    shadowColor: '#5b21b6',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.2,
+    shadowRadius: 18,
+    elevation: 7,
+  },
+  name: { fontSize: 24, fontWeight: '700', color: '#fff', marginBottom: 6 },
+  price: { fontSize: 18, color: '#ede9fe', fontWeight: '700' },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 16,
+    shadowColor: '#0f172a',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 14,
+    elevation: 3,
+  },
+  sectionTitle: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 6 },
+  description: { fontSize: 15, color: '#475569', lineHeight: 22, marginBottom: 10 },
+  stock: { color: '#64748b' },
+  button: { backgroundColor: '#6d28d9', borderRadius: 12, paddingVertical: 14, alignItems: 'center' },
+  buttonText: { color: '#fff', fontWeight: '700', fontSize: 15 },
   errorText: { color: '#ef4444', fontSize: 16 },
 });
