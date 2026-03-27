@@ -1,132 +1,186 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Alert, FlatList, Image, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { Product, RootStackParamList } from '../types';
-import { useProductStore } from '../stores/product.store';
-import { useCartStore } from '../stores/cart.store';
+import { productService } from '../services/product.service';
+import type { ProductSortBy } from '../services/product.service';
+import { orderService } from '../services/order.service';
+import { getCurrentUserId } from '../utils/session';
+import { getLikedProductIds } from '../utils/likes';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ProductList'>;
 
-export function ProductListScreen({ route, navigation }: Props) {
-  const { products, loading, error, fetchProducts } = useProductStore();
-  const addToCart = useCartStore((state) => state.addToCart);
-  const [search, setSearch] = useState('');
-
+export function ProductListScreen({ navigation, route }: Props) {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [keyword, setKeyword] = useState('');
+  const [sortBy, setSortBy] = useState<ProductSortBy>('newest');
+  const [likedOnly, setLikedOnly] = useState(false);
+  const [likedIds, setLikedIds] = useState<number[]>([]);
   const categoryId = route.params?.categoryId;
-  const title = route.params?.title ?? 'Sản phẩm';
 
   useEffect(() => {
-    navigation.setOptions({ title });
-  }, [navigation, title]);
+    (async () => {
+      const res = await productService.getAll(categoryId, sortBy);
+      if (res.success && res.data) setProducts(res.data);
+    })();
+  }, [categoryId, sortBy]);
 
-  useEffect(() => {
-    fetchProducts({ categoryId, search: search.trim() || undefined });
-  }, [categoryId, search, fetchProducts]);
+  useFocusEffect(
+    React.useCallback(() => {
+      (async () => {
+        const ids = await getLikedProductIds();
+        setLikedIds(ids);
+      })();
+    }, [])
+  );
 
-  const onAdd = async (productId: number) => {
-    try {
-      await addToCart(productId, 1);
-      Alert.alert('Thành công', 'Đã thêm vào giỏ hàng');
-    } catch (error) {
-      Alert.alert('Lỗi', error instanceof Error ? error.message : 'Không thể thêm vào giỏ');
+  const filteredProducts = products
+    .filter((item) => item.name.toLowerCase().includes(keyword.trim().toLowerCase()))
+    .filter((item) => (likedOnly ? likedIds.includes(item.id) : true));
+
+  const addToCart = async (productId: number) => {
+    const userId = await getCurrentUserId();
+    if (!userId) {
+      navigation.navigate('Login');
+      return;
     }
+    const res = await orderService.addToCart(productId, 1);
+    if (!res.success) {
+      Alert.alert('Lỗi', res.error || 'Không thêm được vào giỏ hàng');
+      return;
+    }
+    Alert.alert('Thành công', 'Đã thêm sản phẩm vào giỏ hàng');
   };
 
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#6d28d9" />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.centered}>
-        <Text style={styles.errorText}>{error}</Text>
-      </View>
-    );
-  }
-
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={['#8b5cf6', '#6d28d9']} style={styles.banner}>
-        <Text style={styles.bannerTitle}>{title}</Text>
-        <Text style={styles.bannerText}>Khám phá sản phẩm theo phong cách card-based hiện đại.</Text>
-      </LinearGradient>
-
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.wrapper}>
       <TextInput
-        placeholder="Tìm kiếm sản phẩm..."
-        value={search}
-        onChangeText={setSearch}
-        style={styles.searchInput}
-        placeholderTextColor="#94a3b8"
+        style={styles.search}
+        placeholder="Tìm sản phẩm theo tên..."
+        value={keyword}
+        onChangeText={setKeyword}
+      />
+      <FlatList
+        style={styles.filterBar}
+        horizontal
+        data={[
+          { key: 'newest', label: 'Mới nhất' },
+          { key: 'sold_desc', label: 'Bán chạy' },
+          { key: 'price_asc', label: 'Giá tăng' },
+          { key: 'price_desc', label: 'Giá giảm' },
+          { key: 'liked', label: 'Đã tim' },
+        ]}
+        keyExtractor={(item) => item.key}
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterList}
+        renderItem={({ item }) => {
+          const active =
+            item.key === 'liked' ? likedOnly : sortBy === (item.key as ProductSortBy);
+          return (
+            <Pressable
+              style={[styles.filterChip, active && styles.filterChipActive]}
+              onPress={() => {
+                if (item.key === 'liked') {
+                  setLikedOnly((v) => !v);
+                } else {
+                  setSortBy(item.key as ProductSortBy);
+                }
+              }}
+            >
+              <Text style={[styles.filterText, active && styles.filterTextActive]}>{item.label}</Text>
+            </Pressable>
+          );
+        }}
       />
 
       <FlatList
-        data={products}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }: { item: Product }) => (
-          <TouchableOpacity
-            style={styles.card}
-            onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
-          >
-            <Text style={styles.name}>{item.name}</Text>
-            <Text style={styles.price}>{item.price.toLocaleString('vi-VN')} đ</Text>
-            <Text style={styles.stock}>Tồn kho: {item.stock}</Text>
-
-            <TouchableOpacity style={styles.addButton} onPress={() => onAdd(item.id)}>
-              <Text style={styles.addButtonText}>Thêm vào giỏ</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
+        numColumns={2}
+        data={filteredProducts}
+        keyExtractor={(item) => String(item.id)}
+        contentContainerStyle={styles.content}
+        renderItem={({ item }) => (
+          <Pressable style={styles.card} onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}>
+            <Image
+              source={{ uri: item.image || 'https://picsum.photos/seed/explore-fallback/500/500' }}
+              style={styles.thumb}
+              resizeMode="cover"
+            />
+            <View style={styles.topRow}>
+              <Text style={styles.tag}>PREMIUM TECH</Text>
+              <Text style={styles.heart}>{likedIds.includes(item.id) ? '♥' : '♡'}</Text>
+            </View>
+            <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
+            <Text style={styles.price}>${(item.price / 23000).toFixed(2)}</Text>
+            <Text style={styles.sold}>Đã bán: {item.soldCount ?? 0}</Text>
+            <Pressable style={styles.addBtn} onPress={() => addToCart(item.id)}>
+              <Text style={styles.addBtnText}>Add to Cart</Text>
+            </Pressable>
+          </Pressable>
         )}
-        contentContainerStyle={{ paddingBottom: 120 }}
+        ListEmptyComponent={
+          <View>
+            <Text>Không có sản phẩm</Text>
+          </View>
+        }
       />
-    </View>
+      {likedOnly && filteredProducts.length === 0 ? (
+        <View style={styles.emptyLiked}>
+          <Text style={styles.emptyLikedText}>Bạn chưa tim sản phẩm nào</Text>
+        </View>
+      ) : null}
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 16, paddingTop: 8, backgroundColor: '#f4f6ff' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  banner: {
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 12,
-    shadowColor: '#5b21b6',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 18,
-    elevation: 7,
-  },
-  bannerTitle: { color: '#fff', fontSize: 22, fontWeight: '700', marginBottom: 4 },
-  bannerText: { color: '#ede9fe', lineHeight: 20 },
-  searchInput: {
+  safeArea: { flex: 1, backgroundColor: '#f3f4f6' },
+  wrapper: { flex: 1, paddingTop: 8 },
+  search: {
+    marginHorizontal: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#cbd5e1',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     backgroundColor: '#fff',
+  },
+  filterBar: { maxHeight: 56 },
+  filterList: { paddingHorizontal: 12, paddingBottom: 8, gap: 8, alignItems: 'center' },
+  filterChip: {
+    backgroundColor: '#e5e7eb',
+    borderRadius: 24,
+    paddingHorizontal: 14,
+    height: 42,
+    minWidth: 74,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterChipActive: { backgroundColor: '#4338ca' },
+  filterText: { fontWeight: '600', color: '#374151', fontSize: 14 },
+  filterTextActive: { color: '#fff' },
+  content: { padding: 10, paddingBottom: 110 },
+  card: {
+    flex: 1,
+    margin: 5,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 10,
     borderWidth: 1,
     borderColor: '#e5e7eb',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 11,
-    marginBottom: 12,
-    color: '#111827',
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 18,
-    padding: 15,
-    marginBottom: 12,
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.06,
-    shadowRadius: 14,
-    elevation: 3,
-  },
-  name: { fontSize: 16, fontWeight: '700', color: '#111827' },
-  price: { marginTop: 4, color: '#16a34a', fontWeight: '700' },
-  stock: { marginTop: 4, color: '#64748b' },
-  addButton: { marginTop: 10, backgroundColor: '#6d28d9', borderRadius: 10, paddingVertical: 11, alignItems: 'center' },
-  addButtonText: { color: '#fff', fontWeight: '700' },
-  errorText: { color: '#ef4444', fontSize: 16 },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  thumb: { height: 118, borderRadius: 12, backgroundColor: '#f1f5f9', marginBottom: 8 },
+  tag: { color: '#6b7280', fontSize: 10, fontWeight: '600' },
+  heart: { fontSize: 16, color: '#e11d48' },
+  name: { fontSize: 16, fontWeight: '700', marginTop: 3, minHeight: 40, color: '#111827' },
+  price: { marginTop: 6, color: '#111827', fontWeight: '700', fontSize: 20 },
+  sold: { marginTop: 2, color: '#6b7280', fontSize: 12 },
+  addBtn: { marginTop: 8, backgroundColor: '#4338ca', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
+  addBtnText: { color: '#fff', fontWeight: '700' },
+  emptyLiked: { paddingHorizontal: 16, paddingVertical: 10 },
+  emptyLikedText: { color: '#6b7280', fontStyle: 'italic' },
 });

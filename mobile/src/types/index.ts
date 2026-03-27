@@ -9,12 +9,7 @@ export interface User {
   username: string;
   fullName: string;
   email: string;
-  createdAt?: string;
-}
-
-export interface AuthResponse {
-  user: User;
-  token: string;
+  createdAt: string;
 }
 
 export interface Category {
@@ -32,11 +27,19 @@ export interface Product {
   image: string | null;
   categoryId: number;
   stock: number;
+  soldCount?: number;
+  images?: ProductImage[];
 }
 
-export type OrderStatus = 'Pending' | 'Paid';
+export interface ProductImage {
+  id: number;
+  productId: number;
+  colorHex: string;
+  imageUrl: string;
+  sortOrder: number;
+}
 
-export interface OrderItem {
+export interface OrderDetail {
   id: number;
   orderId: number;
   productId: number;
@@ -44,8 +47,10 @@ export interface OrderItem {
   unitPrice: number;
   subtotal: number;
   productName: string;
-  productImage: string | null;
+  productImage?: string | null;
 }
+
+export type OrderStatus = 'Pending' | 'Paid';
 
 export interface Order {
   id: number;
@@ -53,25 +58,25 @@ export interface Order {
   createdAt: string;
   status: OrderStatus;
   totalAmount: number;
-  items: OrderItem[];
+  items: OrderDetail[];
 }
 
 export type RootStackParamList = {
   MainTabs: undefined;
   Login: undefined;
   Register: undefined;
-  ProductList: { categoryId?: number; title?: string } | undefined;
+  Categories: undefined;
+  ProductList: { categoryId?: number; categoryName?: string } | undefined;
   ProductDetail: { productId: number };
+  Cart: undefined;
   Checkout: undefined;
-  Invoice: { order: Order };
   OrderHistory: undefined;
-  UserList: undefined;
-  UserDetail: { userId: number };
 };
 
 export type MainTabParamList = {
   Home: undefined;
-  Categories: undefined;
+  Explore: undefined;
   Cart: undefined;
+  Orders: undefined;
   Profile: undefined;
 };

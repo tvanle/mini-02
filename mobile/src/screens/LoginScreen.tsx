@@ -1,112 +1,187 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import {
+  Alert,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
-import { useAuthStore } from '../stores/auth.store';
+import { authService } from '../services/auth.service';
 
-type Props = {
-  navigation: NativeStackNavigationProp<RootStackParamList, 'Login'>;
-};
+type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
 export function LoginScreen({ navigation }: Props) {
-  const login = useAuthStore((state) => state.login);
-  const loading = useAuthStore((state) => state.loading);
-  const [username, setUsername] = useState('admin');
+  const [username, setUsername] = useState('concierge@luxury.vn');
   const [password, setPassword] = useState('123456');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const onLogin = async () => {
-    try {
-      await login(username.trim(), password);
-    } catch (error) {
-      Alert.alert('Lỗi', error instanceof Error ? error.message : 'Đăng nhập thất bại');
+    setLoading(true);
+    const res = await authService.login({ username, password });
+    setLoading(false);
+    if (!res.success) {
+      Alert.alert('Lỗi', res.error || 'Đăng nhập thất bại');
+      return;
     }
+    navigation.replace('MainTabs');
   };
 
   return (
-    <View style={styles.container}>
-      <LinearGradient colors={['#7c3aed', '#6d28d9']} style={styles.banner}>
-        <Text style={styles.bannerTitle}>Learning Commerce</Text>
-        <Text style={styles.bannerText}>Nền tảng mua sắm học tập với giao diện SaaS hiện đại.</Text>
-      </LinearGradient>
+    <SafeAreaView style={styles.screen}>
+      <View style={styles.container}>
+        <View style={styles.fingerWrap}>
+          <Ionicons name="finger-print" size={40} color="#4338ca" />
+        </View>
 
-      <View style={styles.card}>
         <Text style={styles.title}>Đăng nhập</Text>
-        <Text style={styles.subtitle}>Tiếp tục với tài khoản của bạn</Text>
+        <Text style={styles.subtitle}>Chào mừng bạn quay lại với trải nghiệm dịch vụ cao cấp.</Text>
 
-        <TextInput
-          placeholder="Username"
-          value={username}
-          onChangeText={setUsername}
-          style={styles.input}
-          autoCapitalize="none"
-          placeholderTextColor="#94a3b8"
-        />
-        <TextInput
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          style={styles.input}
-          placeholderTextColor="#94a3b8"
-        />
+        <View style={styles.form}>
+          <Text style={styles.label}>TÊN ĐĂNG NHẬP</Text>
+          <View style={styles.inputWrap}>
+            <Ionicons name="person" size={16} color="#4b5563" />
+            <TextInput
+              style={styles.input}
+              placeholder="concierge@luxury.vn"
+              placeholderTextColor="#9ca3af"
+              value={username}
+              onChangeText={setUsername}
+              autoCapitalize="none"
+            />
+          </View>
 
-        <TouchableOpacity style={styles.button} onPress={onLogin} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? 'Đang đăng nhập...' : 'Đăng nhập'}</Text>
-        </TouchableOpacity>
+          <Text style={styles.label}>MẬT KHẨU</Text>
+          <View style={styles.inputWrap}>
+            <Ionicons name="lock-closed" size={16} color="#4b5563" />
+            <TextInput
+              style={styles.input}
+              placeholder="••••••••"
+              placeholderTextColor="#9ca3af"
+              secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
+            />
+            <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={8}>
+              <Ionicons name={showPassword ? 'eye-off' : 'eye'} size={18} color="#4b5563" />
+            </Pressable>
+          </View>
 
-        <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-          <Text style={styles.link}>Chưa có tài khoản? Đăng ký</Text>
-        </TouchableOpacity>
+          <Pressable style={styles.forgotWrap}>
+            <Text style={styles.forgotText}>Quên mật khẩu?</Text>
+          </Pressable>
+
+          <Pressable onPress={onLogin} disabled={loading}>
+            <LinearGradient colors={['#3126cf', '#5146ef']} style={styles.loginBtn}>
+              <Text style={styles.loginBtnText}>{loading ? 'Đang xử lý...' : 'Login'}</Text>
+            </LinearGradient>
+          </Pressable>
+        </View>
+
+        <View style={styles.registerRow}>
+          <Text style={styles.registerHint}>Chưa có tài khoản? </Text>
+          <Pressable onPress={() => navigation.navigate('Register')}>
+            <Text style={styles.registerLink}>Đăng ký ngay →</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>HOẶC ĐĂNG NHẬP VỚI</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <View style={styles.socialRow}>
+          <Pressable style={styles.socialBtn}>
+            <Text style={styles.socialEmoji}>🪪</Text>
+            <Text style={styles.socialText}>Google</Text>
+          </Pressable>
+          <Pressable style={styles.socialBtn}>
+            <MaterialCommunityIcons name="apple" size={16} color="#111827" />
+            <Text style={styles.socialText}>Apple</Text>
+          </Pressable>
+        </View>
+
+        <Text style={styles.footer}>THE DIGITAL CONCIERGE © 2024</Text>
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f4f6ff', padding: 16, justifyContent: 'center' },
-  banner: {
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 14,
-    shadowColor: '#4f46e5',
-    shadowOffset: { width: 0, height: 14 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 8,
-  },
-  bannerTitle: { color: '#fff', fontSize: 22, fontWeight: '700', marginBottom: 6 },
-  bannerText: { color: '#ede9fe', lineHeight: 20 },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 18,
-    shadowColor: '#0f172a',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18,
-    elevation: 5,
-  },
-  title: { fontSize: 24, fontWeight: '700', color: '#111827' },
-  subtitle: { fontSize: 14, color: '#64748b', marginTop: 4, marginBottom: 14 },
-  input: {
-    backgroundColor: '#f8fafc',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    color: '#111827',
-  },
-  button: {
-    backgroundColor: '#6d28d9',
-    borderRadius: 12,
-    paddingVertical: 13,
-    marginTop: 4,
-    marginBottom: 14,
+  screen: { flex: 1, backgroundColor: '#f3f4f6' },
+  container: { flex: 1, paddingHorizontal: 24, paddingTop: 20, paddingBottom: 18 },
+  fingerWrap: {
+    width: 84,
+    height: 84,
+    borderRadius: 16,
+    backgroundColor: '#e9e7ff',
     alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginTop: 8,
+    marginBottom: 16,
   },
-  buttonText: { color: '#fff', fontWeight: '700', fontSize: 15 },
-  link: { color: '#6d28d9', textAlign: 'center', fontWeight: '600' },
+  title: { fontSize: 52, fontWeight: '800', color: '#111827', textAlign: 'center' },
+  subtitle: {
+    marginTop: 8,
+    fontSize: 15,
+    lineHeight: 22,
+    color: '#4b5563',
+    textAlign: 'center',
+    paddingHorizontal: 6,
+  },
+  form: { marginTop: 20 },
+  label: { fontSize: 15, color: '#374151', fontWeight: '700', letterSpacing: 1, marginBottom: 8, marginTop: 8 },
+  inputWrap: {
+    backgroundColor: '#e5e7eb',
+    borderRadius: 14,
+    height: 60,
+    paddingHorizontal: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  input: { flex: 1, fontSize: 26, color: '#111827' },
+  forgotWrap: { alignSelf: 'flex-end', marginTop: 10 },
+  forgotText: { color: '#4338ca', fontWeight: '600', fontSize: 15 },
+  loginBtn: {
+    marginTop: 16,
+    borderRadius: 14,
+    height: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#4338ca',
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+  },
+  loginBtnText: { color: '#fff', fontWeight: '700', fontSize: 32 },
+  registerRow: { marginTop: 24, flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
+  registerHint: { color: '#374151', fontSize: 17 },
+  registerLink: { color: '#4338ca', fontWeight: '700', fontSize: 17 },
+  dividerRow: { marginTop: 22, flexDirection: 'row', alignItems: 'center', gap: 8 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#d1d5db' },
+  dividerText: { color: '#6b7280', fontSize: 12, letterSpacing: 1.5, fontWeight: '700' },
+  socialRow: { marginTop: 16, flexDirection: 'row', gap: 10 },
+  socialBtn: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    height: 56,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  socialEmoji: { fontSize: 16 },
+  socialText: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  footer: { marginTop: 'auto', textAlign: 'center', color: '#6b7280', fontSize: 11, fontWeight: '700', letterSpacing: 1.2 },
 });
